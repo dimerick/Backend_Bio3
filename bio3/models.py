@@ -40,6 +40,8 @@ class Profile(models.Model):
     description = models.CharField(max_length=1000)
     websites = models.CharField(max_length=1000)
     university = models.ForeignKey(University, on_delete=models.CASCADE)
+    location = models_gis.PointField(null=True, blank=True)
+    ind_researcher = models.BooleanField(default=False)
     
 
 # class ProjectXUser(models.Model):
@@ -58,6 +60,7 @@ class Community(models.Model):
     def __str__(self):
         return f"{self.location}"
 
+
 class Project(models.Model):
     name = models.CharField(max_length=200)
     description = models.CharField(max_length=1000)
@@ -68,6 +71,7 @@ class Project(models.Model):
     users = models.ManyToManyField(CustomUser, related_name='projects', blank=True)
     universities = models.ManyToManyField(University, related_name='projects', blank=True)
     communities = models.ManyToManyField(Community, related_name='projects', blank=True)
+    researchers = models.ManyToManyField(Profile, related_name='researchers', blank=True)
 
     is_active = models.BooleanField(default=True)
 

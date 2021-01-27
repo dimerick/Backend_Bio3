@@ -9,7 +9,7 @@ class ProjectSerializer(serializers.ModelSerializer):
         model = Project
         fields = '__all__'
 
-        extra_kwargs = {'users': {'required': False, 'allow_null': True}, 'universities': {'required': False, 'allow_null': True}, 'communities': {'required': False, 'allow_null': True}}
+        extra_kwargs = {'users': {'required': False, 'allow_null': True}, 'universities': {'required': False, 'allow_null': True}, 'communities': {'required': False, 'allow_null': True}, 'researchers': {'required': False, 'allow_null': True}}
     
     def create(self, validated_data):
         obj = super(ProjectSerializer, self).create(validated_data)
@@ -36,6 +36,7 @@ class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
         fields = '__all__'
+        extra_kwargs = {'projects': {'required': False, 'allow_null': True}}
         
     def create(self, validated_data):
         obj = super(ProfileSerializer, self).create(validated_data)
