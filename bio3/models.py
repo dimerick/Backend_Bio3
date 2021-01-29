@@ -38,8 +38,8 @@ class Profile(models.Model):
     degree = models.ForeignKey(Degree, on_delete=models.CASCADE)
     field_of_study = models.ForeignKey(FieldsOfStudy, on_delete=models.CASCADE)
     description = models.CharField(max_length=1000)
-    websites = models.CharField(max_length=1000)
-    university = models.ForeignKey(University, on_delete=models.CASCADE)
+    websites = models.CharField(max_length=1000, blank=True, null=True)
+    university = models.ForeignKey(University, on_delete=models.CASCADE, blank=True, null=True)
     location = models_gis.PointField(null=True, blank=True)
     ind_researcher = models.BooleanField(default=False)
     
