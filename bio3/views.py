@@ -140,17 +140,30 @@ class UniversityList(APIView):
 
     def get(self, request, format=None):
 
-        name = request.GET.get('name', None)
+        user = request.GET.get('user', None)
         exclude_id = request.GET.get('exclude_id', None)
-        if(name):
-            objs = University.objects.filter(name__icontains=name)
-        elif(exclude_id):
-            objs = University.objects.exclude(id=exclude_id)
+        tipo = request.GET.get('tipo', None)
+        
+        if user:
+            with connection.cursor() as cursor:
+                cursor.execute("select uni.id, uni.name, ST_Y(uni.location) as lat, ST_X(uni.location) as lon, created_at, uni.created_by_id as created_by, tipo from bio3_university uni where tipo = %s and uni.id <> %s union all select uni.id, 'My Location' as name, ST_Y(uni.location) as lat, ST_X(uni.location) as lon, created_at, uni.created_by_id as created_by, tipo from bio3_university uni inner join bio3_profile prof on uni.id = prof.university_id where prof.user_id = %s;", [tipo, exclude_id, user])
+                unis_tmp = dictfetchall(cursor)
+                print(str(len(unis_tmp)))
+                universities = []
+                for i in range(0, len(unis_tmp)):
+                    universities.append({'id': unis_tmp[i]['id'], 'projects': [], 'name': unis_tmp[i]['name'], 'location': {'type': 'Point', 'coordinates': [unis_tmp[i]['lon'], unis_tmp[i]['lat']]}, 'created_at': unis_tmp[i]['created_at'], 'tipo': unis_tmp[i]['tipo'], 'created_by': unis_tmp[i]['created_by']})
+                
+            return JsonResponse(universities, safe=False)
         else:
-            objs = University.objects.all()
+            name = request.GET.get('name', None)
+            exclude_id = request.GET.get('exclude_id', None)
+            if(name):
+                objs = University.objects.filter(name__icontains=name, tipo=tipo).exclude(id=exclude_id)
+            else:
+                objs = University.objects.filter(tipo=tipo).exclude(id=exclude_id)
 
-        serializer = UniversitySerializer(objs, many=True)
-        return Response(serializer.data)
+            serializer = UniversitySerializer(objs, many=True)
+            return Response(serializer.data)
 
     def post(self, request):
         serializer = UniversitySerializer(data=request.data)
@@ -448,8 +461,14 @@ class NodesNetworkDetail(APIView):
 class ProjectExpandedList(APIView):
     
     def get(self, request, format=None):
+
+        user = request.GET.get('user', None)
+
         with connection.cursor() as cursor:
-            cursor.execute("select project.id, project.name, project.description, project.created_at, project.main_university_id as main_university, uni.name as universidad, ST_X(uni.location) as long, ST_Y(uni.location) as lat, ST_AsText(ST_Transform(uni.location, 4326)) as uni_location, user2.id as user_id, user2.name as user_name, user2.last_name as user_last_name from bio3_project project inner join bio3_university uni on project.main_university_id = uni.id inner join bio3_customuser user2 on project.created_by_id = user2.id where project.is_active = true order by project.created_at desc;")
+            if user:
+                cursor.execute("select project.id, project.name, project.description, project.created_at, project.main_university_id as main_university, uni.name as universidad, ST_X(uni.location) as long, ST_Y(uni.location) as lat, ST_AsText(ST_Transform(uni.location, 4326)) as uni_location, user2.id as user_id, user2.name as user_name, user2.last_name as user_last_name from bio3_project project inner join bio3_university uni on project.main_university_id = uni.id inner join bio3_customuser user2 on project.created_by_id = user2.id where project.is_active = true and project.created_by_id = %s order by project.created_at desc;", [user])
+            else:
+                cursor.execute("select project.id, project.name, project.description, project.created_at, project.main_university_id as main_university, uni.name as universidad, ST_X(uni.location) as long, ST_Y(uni.location) as lat, ST_AsText(ST_Transform(uni.location, 4326)) as uni_location, user2.id as user_id, user2.name as user_name, user2.last_name as user_last_name from bio3_project project inner join bio3_university uni on project.main_university_id = uni.id inner join bio3_customuser user2 on project.created_by_id = user2.id where project.is_active = true order by project.created_at desc;")
             projects = dictfetchall(cursor)
 
             for i in range(0, len(projects)):

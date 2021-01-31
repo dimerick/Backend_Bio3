@@ -28,10 +28,11 @@ class FieldsOfStudy(models.Model):
     name = models.CharField(max_length=100, unique=True)
 
 class University(models.Model):
-    name = models.CharField(max_length=200, unique=True)
+    name = models.CharField(max_length=200)
     location = models_gis.PointField()
     created_by = models.ForeignKey(CustomUser, on_delete=models.CASCADE, default=1, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
+    tipo = models.CharField(max_length=20, default='university')
 
 class Profile(models.Model):
     user = models.OneToOneField(CustomUser, primary_key=True, on_delete=models.CASCADE)
@@ -40,7 +41,6 @@ class Profile(models.Model):
     description = models.CharField(max_length=1000)
     websites = models.CharField(max_length=1000, blank=True, null=True)
     university = models.ForeignKey(University, on_delete=models.CASCADE, blank=True, null=True)
-    location = models_gis.PointField(null=True, blank=True)
     ind_researcher = models.BooleanField(default=False)
     
 
